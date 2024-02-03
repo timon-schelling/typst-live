@@ -15,11 +15,17 @@
 
     let ws = null;
 
-    function updatePdf() {
+    async function updatePdf() {
       const pdf = document.getElementById("target")
       if (pdf) {
         pdf.src += '';
         pdf.focus();
+
+        //wait for pdf to load
+        //some browsers block subsequent requests if they are identical
+        await new Promise((resolve, _) => {
+          pdf.addEventListener('load', () => resolve(), { once: true });
+        })
       }
     }
 
@@ -28,23 +34,23 @@
 
       ws = new WebSocket(path.toString());
 
-      ws.addEventListener('open', (_) => {
+      ws.addEventListener('open', async (_) => {
         connected = true;
         console.log('[typst-live] - Connected')
-        updatePdf();
+        await updatePdf();
       });
 
-      ws.addEventListener('message', (_) => {
+      ws.addEventListener('message', async (_) => {
         console.log('[typst-live] - Updating pdf')
-        updatePdf();
+        await updatePdf();
       });
 
-      ws.addEventListener('close', (_) => {
+      ws.addEventListener('close', async (_) => {
         connected = false;
         console.log('[typst-live] - Disconnected')
       });
 
-      ws.addEventListener('error', (_) => {
+      ws.addEventListener('error', async (_) => {
         connected = false;
         console.log('[typst-live] - Connection error')
       });
